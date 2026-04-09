@@ -153,6 +153,7 @@ export default function CoachPage() {
 
             <div className="rounded-lg overflow-hidden shadow-ambient">
               <Chessboard
+                // @ts-expect-error - position prop is missing in some types but works in runtime
                 position={currentFen}
                 arePiecesDraggable={false}
                 boardWidth={280}

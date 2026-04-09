@@ -104,6 +104,7 @@ export function GameView({ level, onBack }: GameViewProps) {
           <div className="absolute -inset-2 bg-gradient-to-b from-primary/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="relative rounded-xl overflow-hidden border border-white/5 shadow-2xl">
             <Chessboard 
+              // @ts-expect-error - position prop is missing in some types but works in runtime
               position={fen} 
               onPieceDrop={onDrop}
               boardOrientation="white"

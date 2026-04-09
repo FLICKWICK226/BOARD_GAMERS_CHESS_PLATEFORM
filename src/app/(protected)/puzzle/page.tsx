@@ -164,7 +164,7 @@ export default function PuzzlePage() {
           const { error: ratingError } = await supabase
             .from('users')
             .update({ rating: newRating })
-            .eq('id', user.id)
+            .eq('id', userId)
 
           if (!ratingError) {
             setRatingGain(newRating - userRating)
