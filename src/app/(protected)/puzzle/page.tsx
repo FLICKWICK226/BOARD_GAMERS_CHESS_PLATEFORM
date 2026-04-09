@@ -87,7 +87,7 @@ export default function PuzzlePage() {
         .single()
 
       if (error) {
-        console.error('Fetch error:', error)
+        console.error('Fetch error:', error.message, error.details || '')
         setError("Aucun puzzle disponible pour ce niveau aujourd'hui.")
         setPuzzle(null)
       } else {

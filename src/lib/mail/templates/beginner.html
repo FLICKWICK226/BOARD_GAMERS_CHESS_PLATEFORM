@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Défi Débutant - Chess Community</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0d1117;font-family:Arial,Helvetica,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0d1117;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;border-bottom:3px solid #1a7f37;">
+              <p style="margin:0 0 8px 0;font-size:36px;">⭐</p>
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:1px;">Chess Community</h1>
+              <p style="margin:8px 0 0 0;color:#888888;font-size:13px;">Ton défi du jour — {{ $now.format('EEEE d MMMM yyyy') }}</p>
+            </td>
+          </tr>
+
+          <!-- SALUTATION -->
+          <tr>
+            <td style="background:#161b22;padding:28px 40px 0 40px;">
+              <p style="margin:0;color:#e6edf3;font-size:16px;">Bonjour <strong style="color:#1a7f37;">{{ $json.user_name }}</strong> ! Prêt pour un petit exercice ? 👋</p>
+              <p style="margin:12px 0 0 0;color:#8b949e;font-size:14px;line-height:1.6;">Le secret pour progresser, c'est de s'entraîner un petit peu chaque jour. Ne te presse pas, regarde bien toutes tes pièces avant de jouer !</p>
+            </td>
+          </tr>
+
+          <!-- NIVEAU BADGE -->
+          <tr>
+            <td style="background:#161b22;padding:20px 40px;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:#1a7f37;border-radius:20px;padding:6px 16px;">
+                    <span style="color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;">⭐ NIVEAU DÉBUTANT</span>
+                  </td>
+                  <td style="padding-left:12px;">
+                    <span style="color:#8b949e;font-size:12px;">Difficulté adaptée • Thèmes : {{ $json.puzzle_themes }}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ECHIQUIER -->
+          <tr>
+            <td style="background:#161b22;padding:0 40px 24px 40px;text-align:center;">
+              <div style="border-radius:12px;overflow:hidden;display:inline-block;border:3px solid #30363d;">
+                <img src="{{ $json.board_image_url }}" alt="Position du puzzle" width="300" height="300" style="display:block;border:0;" />
+              </div>
+              <p style="margin:12px 0 0 0;color:#8b949e;font-size:12px;">Astuce : Vérifie si tu peux manger une pièce gratuitement !</p>
+            </td>
+          </tr>
+
+          <!-- CTA PRINCIPAL -->
+          <tr>
+            <td style="background:#161b22;padding:0 40px 32px 40px;text-align:center;">
+              <a href="{{ $json.puzzle_url }}" style="display:inline-block;background:#1a7f37;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:16px;letter-spacing:0.5px;">♟ Relever le défi</a>
+              <p style="margin:12px 0 0 0;color:#8b949e;font-size:12px;">Chaque erreur est une leçon !</p>
+            </td>
+          </tr>
+
+          <!-- SEPARATEUR -->
+          <tr>
+            <td style="background:#161b22;padding:0 40px;">
+              <div style="height:1px;background:#30363d;"></div>
+            </td>
+          </tr>
+
+          <!-- CULTURE GENERALE -->
+          <tr>
+            <td style="background:#161b22;padding:28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#1c2128;border-radius:12px;border-left:4px solid #1a7f37;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 8px 0;color:#1a7f37;font-size:12px;font-weight:700;letter-spacing:1px;">💡 LE SAVAIS-TU ?</p>
+                    <p style="margin:0;color:#c9d1d9;font-size:14px;line-height:1.7;">{{ $json.culture_text }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- LIENS RAPIDES -->
+          <tr>
+            <td style="background:#161b22;padding:0 40px 28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding:0 6px;">
+                    <a href="{{ $json.app_url }}/play" style="display:block;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:12px;text-decoration:none;text-align:center;">
+                      <span style="font-size:20px;">🤖</span>
+                      <p style="margin:4px 0 0 0;color:#c9d1d9;font-size:12px;">Jouer tranquille</p>
+                    </a>
+                  </td>
+                  <td align="center" style="padding:0 6px;">
+                    <a href="{{ $json.app_url }}/coach" style="display:block;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:12px;text-decoration:none;text-align:center;">
+                      <span style="font-size:20px;">🧠</span>
+                      <p style="margin:4px 0 0 0;color:#c9d1d9;font-size:12px;">Aide du Coach</p>
+                    </a>
+                  </td>
+                  <td align="center" style="padding:0 6px;">
+                    <a href="{{ $json.app_url }}/dashboard" style="display:block;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:12px;text-decoration:none;text-align:center;">
+                      <span style="font-size:20px;">📊</span>
+                      <p style="margin:4px 0 0 0;color:#c9d1d9;font-size:12px;">Mes progrès</p>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#0d1117;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;border-top:1px solid #21262d;">
+              <p style="margin:0;color:#484f58;font-size:12px;line-height:1.6;">On est là pour t'aider à t'améliorer.<br/><a href="{{ $json.app_url }}/profile" style="color:#1a7f37;text-decoration:none;">Gérer mes préférences</a>.</p>
+              <p style="margin:12px 0 0 0;color:#484f58;font-size:11px;">♟ Chess Community — Un jour, un puzzle, une victoire.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

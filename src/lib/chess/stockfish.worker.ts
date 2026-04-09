@@ -1,16 +1,7 @@
-/**
- * Stockfish Web Worker
- * This worker loads the Stockfish engine and communicates via UCI.
- */
-
-// We use self.importScripts to load the Stockfish engine from the public folder
-// since Next.js serving it statically.
-
 /* eslint-disable no-restricted-globals */
-const isBrowser = typeof window === 'undefined';
+const isWorkerContext = typeof self !== 'undefined' && typeof window === 'undefined';
 
-if (isBrowser) {
-  // We need to keep track of the engine instance
+if (isWorkerContext) {
   let engine: any = null;
 
   self.onmessage = (e: MessageEvent) => {
@@ -18,21 +9,38 @@ if (isBrowser) {
 
     if (message === 'init') {
       try {
+        console.log('[Stockfish Worker] Initializing...');
         // @ts-ignore
         self.importScripts('/stockfish-18-lite-single.js');
         
         // @ts-ignore
         if (typeof Stockfish === 'function') {
           // @ts-ignore
-          engine = Stockfish();
-          
-          engine.onmessage = (msg: string) => {
-            self.postMessage(msg);
-          };
+          const module = Stockfish({
+            locateFile: (path: string) => {
+              if (path.endsWith('.wasm')) {
+                return '/stockfish-18-lite-single.wasm';
+              }
+              return path;
+            }
+          });
 
-          self.postMessage('ready');
+          // Handle both promise-based and object-based initialization
+          if (module && typeof module.then === 'function') {
+            module.then((instance: any) => {
+              engine = instance;
+              engine.onmessage = (msg: string) => self.postMessage(msg);
+              self.postMessage('ready');
+            }).catch((err: any) => {
+              self.postMessage(`error: Module init failed: ${err}`);
+            });
+          } else {
+            engine = module;
+            engine.onmessage = (msg: string) => self.postMessage(msg);
+            self.postMessage('ready');
+          }
         } else {
-          self.postMessage('error: Stockfish not found in imported script');
+          self.postMessage('error: Stockfish function not found after importScripts');
         }
       } catch (error) {
         self.postMessage(`error: ${error instanceof Error ? error.message : String(error)}`);

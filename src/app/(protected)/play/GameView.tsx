@@ -55,7 +55,9 @@ export function GameView({ level, onBack }: GameViewProps) {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-tight">IA Stockfish</h3>
-              <p className="text-xs text-muted-foreground capitalize">{level}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {level.category} (UCI {level.skill})
+              </p>
             </div>
           </div>
 
