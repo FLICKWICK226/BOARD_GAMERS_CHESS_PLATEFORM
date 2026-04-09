@@ -1,5 +1,0 @@
-shadcn/ui 
-react-chessboard
-chess.js
-@supabase/supabase-js
-@supabase/auth-helpers-nextjs

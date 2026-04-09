@@ -1,130 +1,226 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   BOARD CHESS — Tactical Precision Design System
+   Based on: public/DESIGN.md
+   Primary: #a0d660 (Tactical Green)
+   Surface: #0f0e0c (Deep Slate)
+   ============================================ */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
+
+  /* Surface hierarchy */
+  --color-surface: var(--surface);
+  --color-surface-low: var(--surface-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-high: var(--surface-high);
+  --color-surface-highest: var(--surface-highest);
+  --color-surface-bright: var(--surface-bright);
+
+  /* Primary */
   --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-container: var(--primary-container);
+  --color-primary-dim: var(--primary-dim);
+
+  /* Secondary / Muted */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* Destructive */
+  --color-destructive: var(--destructive);
+
+  /* Borders & rings */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
+  /* Card */
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Popover */
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
 }
 
+/* ========== Tactical Precision — Dark Only ========== */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  /* Surface Hierarchy (The Grandmaster's Study) */
+  --background: #0f0e0c;
+  --foreground: #e8e4e0;
+  --surface: #0f0e0c;
+  --surface-low: #141311;
+  --surface-container: #1b1917;
+  --surface-high: #211f1d;
+  --surface-highest: #272623;
+  --surface-bright: #2e2c29;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Primary — Tactical Green */
+  --primary: #a0d660;
+  --primary-foreground: #152800;
+  --primary-container: #82b644;
+  --primary-dim: #8bc34a;
+
+  /* Secondary */
+  --secondary: #3f6900;
+  --secondary-foreground: #eaffcd;
+
+  /* Muted */
+  --muted: #272623;
+  --muted-foreground: #aeaaa7;
+
+  /* Accent */
+  --accent: #272623;
+  --accent-foreground: #e8e4e0;
+
+  /* Destructive */
+  --destructive: #ff7351;
+
+  /* Borders */
+  --border: rgba(74, 72, 69, 0.3);
+  --input: rgba(74, 72, 69, 0.4);
+  --ring: #a0d660;
+  --outline: #787572;
+  --outline-variant: #4a4845;
+
+  /* Card */
+  --card: #1b1917;
+  --card-foreground: #e8e4e0;
+
+  /* Popover */
+  --popover: #211f1d;
+  --popover-foreground: #e8e4e0;
+
+  /* Sidebar */
+  --sidebar: #141311;
+  --sidebar-foreground: #aeaaa7;
+  --sidebar-primary: #a0d660;
+  --sidebar-primary-foreground: #152800;
+  --sidebar-accent: #1b1917;
+  --sidebar-accent-foreground: #e8e4e0;
+  --sidebar-border: rgba(74, 72, 69, 0.15);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* ============================================
+   Custom Utilities — Tactical Precision
+   ============================================ */
+
+/* Glassmorphism for sidebar & floating panels */
+.glass {
+  background: rgba(27, 25, 23, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Primary gradient for CTAs */
+.gradient-primary {
+  background: linear-gradient(135deg, #a0d660, #82b644);
+}
+
+/* Tactical green glow for buttons */
+.glow-primary {
+  box-shadow: 0 0 16px rgba(160, 214, 96, 0.15), 0 0 4px rgba(160, 214, 96, 0.1);
+}
+
+.glow-primary-hover:hover {
+  box-shadow: 0 0 24px rgba(160, 214, 96, 0.25), 0 0 8px rgba(160, 214, 96, 0.15);
+}
+
+/* Ambient shadow for floating elements */
+.shadow-ambient {
+  box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Ghost border — outline-variant at 15% */
+.ghost-border {
+  border: 1px solid rgba(74, 72, 69, 0.15);
+}
+
+/* Active sidebar indicator */
+.sidebar-active {
+  position: relative;
+}
+.sidebar-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #a0d660, #82b644);
+}
+
+/* Streak glow animation */
+@keyframes streak-pulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(160, 214, 96, 0.4)); }
+  50% { opacity: 0.85; filter: drop-shadow(0 0 16px rgba(160, 214, 96, 0.6)); }
+}
+.streak-glow {
+  animation: streak-pulse 2s ease-in-out infinite;
+}
+
+/* Stat ring animation */
+@keyframes stat-fill {
+  from { stroke-dashoffset: var(--stat-circumference, 283); }
+  to { stroke-dashoffset: var(--stat-offset, 50); }
+}
+.stat-ring {
+  animation: stat-fill 1.5s ease-out forwards;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fadeInUp 0.3s ease-out;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
