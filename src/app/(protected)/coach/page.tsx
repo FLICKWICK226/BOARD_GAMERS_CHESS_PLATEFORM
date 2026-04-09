@@ -201,9 +201,9 @@ export default function CoachPage() {
                   <BotMessageSquare className="w-3.5 h-3.5 text-primary" />
                 </div>
                 <div className="bg-surface-high rounded-xl px-4 py-3 flex gap-1.5 items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
                 </div>
               </div>
             )}
@@ -226,6 +226,8 @@ export default function CoachPage() {
               <button
                 onClick={sendMessage}
                 disabled={!input.trim()}
+                title="Envoyer le message"
+                aria-label="Envoyer le message"
                 className={`
                   flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center
                   transition-all duration-200

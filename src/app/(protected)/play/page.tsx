@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { Bot, Cpu, Zap, ChevronRight, Star, Clock } from 'lucide-react'
+import { EngineLevel } from '@/hooks/use-stockfish'
+import { GameView } from './GameView'
 
 const levels = [
   {
-    id: 'beginner',
+    id: 'beginner' as EngineLevel,
     label: 'Débutant',
     elo: '400–800',
     icon: Star,
@@ -16,7 +18,7 @@ const levels = [
     features: ['Pas de pièges tactiques', 'Temps de réflexion lent', 'Explications disponibles'],
   },
   {
-    id: 'intermediate',
+    id: 'intermediate' as EngineLevel,
     label: 'Intermédiaire',
     elo: '1000–1400',
     icon: Cpu,
@@ -27,7 +29,7 @@ const levels = [
     features: ['Tactiques de base', 'Endgames corrects', 'Jeu positionnel solide'],
   },
   {
-    id: 'expert',
+    id: 'expert' as EngineLevel,
     label: 'Expert',
     elo: '1800–2200',
     icon: Zap,
@@ -46,11 +48,23 @@ const timeControls = [
 ]
 
 export default function PlayPage() {
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null)
+  const [selectedLevel, setSelectedLevel] = useState<EngineLevel | null>(null)
   const [selectedTime, setSelectedTime] = useState('rapid')
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  if (isPlaying && selectedLevel) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <GameView 
+          level={selectedLevel} 
+          onBack={() => setIsPlaying(false)} 
+        />
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="max-w-5xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">Jouer contre un Bot</h1>
         <p className="text-muted-foreground mt-1 text-sm">Choisissez votre adversaire et le contrôle du temps.</p>
@@ -128,7 +142,7 @@ export default function PlayPage() {
       </div>
 
       {/* Bot preview + CTA */}
-      <div className="bg-surface-container rounded-xl p-6">
+      <div className="bg-surface-container rounded-xl p-6 border border-border/50">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {/* Bot avatar */}
           <div className={`
@@ -153,6 +167,7 @@ export default function PlayPage() {
 
           <button
             disabled={!selectedLevel}
+            onClick={() => setIsPlaying(true)}
             className={`
               flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm
               transition-all duration-200 whitespace-nowrap

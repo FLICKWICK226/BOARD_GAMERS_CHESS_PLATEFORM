@@ -154,8 +154,8 @@
 /* Glassmorphism for sidebar & floating panels */
 .glass {
   background: rgba(27, 25, 23, 0.7);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 /* Primary gradient for CTAs */
