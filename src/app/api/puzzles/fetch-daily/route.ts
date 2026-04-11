@@ -110,9 +110,15 @@ async function fetchPuzzleByRating(
 // ────────────────────────────────────────────
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization')
+  const xApiKey = request.headers.get('x-api-key')
   const cronSecret = process.env.CRON_SECRET
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  const isAuthorized = 
+    (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
+    (cronSecret && xApiKey === cronSecret)
+
+  if (!isAuthorized) {
+    console.error(`[API] Unauthorized access attempt to fetch-daily. Auth provided: ${authHeader ? 'Bearer' : 'None'}, X-API-Key: ${xApiKey ? 'Yes' : 'No'}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -151,7 +157,7 @@ export async function POST(request: Request) {
     )
 
     if (error) throw new Error(error.message)
-    results.expert = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes }
+    results.expert = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes, fen: puzzle.fen }
   } catch (err) {
     errors.expert = String(err instanceof Error ? err.message : err)
   }
@@ -182,7 +188,7 @@ export async function POST(request: Request) {
     )
 
     if (error) throw new Error(error.message)
-    results.intermediate = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes }
+    results.intermediate = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes, fen: puzzle.fen }
   } catch (err) {
     errors.intermediate = String(err instanceof Error ? err.message : err)
   }
@@ -213,7 +219,7 @@ export async function POST(request: Request) {
     )
 
     if (error) throw new Error(error.message)
-    results.beginner = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes }
+    results.beginner = { id: puzzle.id, rating: puzzle.rating, themes: puzzle.themes, fen: puzzle.fen }
   } catch (err) {
     errors.beginner = String(err instanceof Error ? err.message : err)
   }

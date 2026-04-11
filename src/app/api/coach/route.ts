@@ -194,7 +194,7 @@ Question du joueur : ${question}`;
   // ── Stream from Claude ──
   try {
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1024,
       system: buildSystemPrompt(level),
       messages: [

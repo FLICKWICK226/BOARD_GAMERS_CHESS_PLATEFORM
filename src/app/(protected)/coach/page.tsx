@@ -155,7 +155,20 @@ export default function CoachPage() {
               <Chessboard
                 // @ts-expect-error - position prop is missing in some types but works in runtime
                 position={currentFen}
-                arePiecesDraggable={false}
+                onPieceDrop={(source, target) => {
+                  try {
+                    const game = new Chess(currentFen);
+                    const move = game.move({ from: source, to: target, promotion: 'q' });
+                    if (move) {
+                      setCurrentFen(game.fen());
+                      return true;
+                    }
+                  } catch (e) {
+                    return false;
+                  }
+                  return false;
+                }}
+                arePiecesDraggable={true}
                 boardWidth={280}
                 customDarkSquareStyle={{ backgroundColor: '#2d333b' }}
                 customLightSquareStyle={{ backgroundColor: '#e6edf3' }}

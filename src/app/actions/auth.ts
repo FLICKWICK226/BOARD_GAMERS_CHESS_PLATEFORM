@@ -28,6 +28,7 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
+  const level = formData.get('level') as string || 'beginner'
 
   if (password !== confirmPassword) {
     return { error: 'Les mots de passe ne correspondent pas.' }
@@ -40,6 +41,11 @@ export async function signUp(formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        level: level,
+      }
+    }
   })
 
   if (error) {
@@ -55,4 +61,22 @@ export async function signOut() {
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
   redirect('/login')
+}
+
+export async function updateLevel(level: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('users')
+    .update({ level })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/profile')
+  revalidatePath('/dashboard')
+  return { success: true }
 }
