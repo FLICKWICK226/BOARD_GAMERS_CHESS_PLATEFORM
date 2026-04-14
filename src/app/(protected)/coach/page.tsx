@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { Chessboard } from 'react-chessboard'
 import { Chess } from 'chess.js'
-import { useCoach, CoachMessage } from '@/hooks/use-coach'
+import { useCoach } from '@/hooks/use-coach'
 
 // ── Default starting position ──
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -153,25 +153,26 @@ export default function CoachPage() {
 
             <div className="rounded-lg overflow-hidden shadow-ambient">
               <Chessboard
-                // @ts-expect-error - position prop is missing in some types but works in runtime
-                position={currentFen}
-                onPieceDrop={(source, target) => {
-                  try {
-                    const game = new Chess(currentFen);
-                    const move = game.move({ from: source, to: target, promotion: 'q' });
-                    if (move) {
-                      setCurrentFen(game.fen());
-                      return true;
+                options={{
+                  position: currentFen,
+                  onPieceDrop: ({ sourceSquare, targetSquare }) => {
+                    if (!targetSquare) return false;
+                    try {
+                      const game = new Chess(currentFen);
+                      const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+                      if (move) {
+                        setCurrentFen(game.fen());
+                        return true;
+                      }
+                    } catch {
+                      return false;
                     }
-                  } catch (e) {
                     return false;
-                  }
-                  return false;
+                  },
+                  allowDragging: true,
+                  darkSquareStyle: { backgroundColor: '#2d333b' },
+                  lightSquareStyle: { backgroundColor: '#e6edf3' },
                 }}
-                arePiecesDraggable={true}
-                boardWidth={280}
-                customDarkSquareStyle={{ backgroundColor: '#2d333b' }}
-                customLightSquareStyle={{ backgroundColor: '#e6edf3' }}
               />
             </div>
 
@@ -416,8 +417,9 @@ export default function CoachPage() {
                 </div>
                 <div className="w-full h-1 bg-surface-highest rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500
+                  className={`h-full rounded-full transition-all duration-500
                       ${creditsRemaining <= 5 ? 'bg-yellow-400' : 'bg-primary'}`}
+                    // eslint-disable-next-line react/forbid-component-props
                     style={{ width: `${(creditsRemaining / maxCredits) * 100}%` }}
                   />
                 </div>

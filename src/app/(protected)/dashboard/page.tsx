@@ -1,17 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { TrendingUp, Flame, Target, Trophy, ChevronRight, Clock } from 'lucide-react'
+import { TrendingUp, Trophy, ChevronRight, Check, AlertCircle } from 'lucide-react'
 
-const stats = [
-  { label: 'Puzzles résolus', value: '124', unit: '', change: '+8 cette semaine' },
-  { label: 'Taux de succès', value: '82', unit: '%', change: '+3% ce mois' },
-  { label: 'Elo Tactique', value: '1 540', unit: '', change: '+45 ce mois' },
-]
 
-const recentPuzzles = [
-  { id: 1, name: 'Fourchette royale', difficulty: 'Expert', solved: true, time: '1m 12s' },
-  { id: 2, name: 'Mat en 2 coups', difficulty: 'Intermédiaire', solved: true, time: '0m 48s' },
-  { id: 3, name: 'Clouage décisif', difficulty: 'Débutant', solved: false, time: '—' },
-]
 
 const difficultyColor: Record<string, string> = {
   'Expert': 'text-red-400 bg-red-400/10',
@@ -60,7 +50,8 @@ export default async function DashboardPage() {
     .limit(5)
 
   // 4. Transform attempts for UI
-  const recentPuzzles = (recentAttempts || []).map((att: any, idx) => ({
+  type PuzzleAttempt = { solved: boolean; time_spent_seconds: number; daily_content?: { level?: string; lichess_id?: string } | null }
+  const recentPuzzles = (recentAttempts as PuzzleAttempt[] || []).map((att, idx) => ({
     id: idx,
     name: `Puzzle #${att.daily_content?.lichess_id || 'Global'}`,
     difficulty: att.daily_content?.level === 'beginner' ? 'Débutant' : att.daily_content?.level === 'intermediate' ? 'Intermédiaire' : 'Expert',
@@ -149,7 +140,7 @@ export default async function DashboardPage() {
             </div>
             <p className="text-foreground font-medium mb-2">Améliorez votre Elo Tactique</p>
             <p className="text-xs text-muted-foreground max-w-xs">
-              Mettez vos compétences à l'épreuve avec des puzzles adaptés à votre niveau.
+              Mettez vos comp&eacute;tences &agrave; l&apos;&eacute;preuve avec des puzzles adapt&eacute;s &agrave; votre niveau.
             </p>
           </div>
 

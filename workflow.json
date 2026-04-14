@@ -1,0 +1,319 @@
+{
+  "name": "Chess — Puzzles Quotidiens (Grandmaster Edition)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "e6f8f5e1-8b9a-4c1d-8e2b-7f3a9c5d1e2f",
+      "name": "Cron 7h00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/puzzles/fetch-daily",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "🧩 Générer Puzzles du Jour",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Chess Platform API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users"
+      },
+      "id": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "name": "Récupérer Utilisateurs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Supabase Chess Platform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f",
+      "name": "Boucle par User",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [920, 400]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.level }}",
+                    "rightValue": "beginner",
+                    "operator": "equal"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Debutant"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.level }}",
+                    "rightValue": "intermediate",
+                    "operator": "equal"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Intermediaire"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.level }}",
+                    "rightValue": "expert",
+                    "operator": "equal"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Expert"
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a",
+      "name": "Routing Niveau",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1140, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const level = 'beginner';\nconst levelName = 'Débutant';\nconst user = $node[\"Boucle par User\"].json;\nconst puzzlesData = $node[\"🧩 Générer Puzzles du Jour\"].json;\n\n// Debug: verify structure\nconst puzzles = puzzlesData.puzzles || puzzlesData;\nconst puzzle = puzzles[level];\n\nconst boardImageUrl = `https://fen2image.chessvision.ai/?fen=${encodeURIComponent(puzzle.fen)}`;\nconst puzzleUrl = `http://localhost:3000/puzzle?id=${puzzle.id}`;\n\nconst html = `\n<div style=\"background-color: #141311; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 60px 20px; text-align: center;\">\n  <div style=\"max-width: 600px; margin: 0 auto;\">\n    <h1 style=\"color: #a0d660; font-size: 32px; letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 800; text-transform: uppercase;\">Tactical Precision</h1>\n    \n    <p style=\"font-size: 18px; color: #E5E7EB; line-height: 1.6; margin-bottom: 40px;\">\n      Bonjour <b>${user.username}</b>,<br/>\n      Votre esprit stratégique est requis. Voici votre défi quotidien.\n    </p>\n    \n    <div style=\"background-color: #1c1a17; padding: 32px; border-radius: 12px; margin-bottom: 40px;\">\n      <img src=\"${boardImageUrl}\" width=\"100%\" style=\"max-width: 400px; border-radius: 4px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4);\" />\n      \n      <div style=\"margin-top: 24px;\">\n        <span style=\"color: #a0d660; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(160, 214, 96, 0.1); padding: 4px 12px; border-radius: 9999px;\">\n          Niveau: ${levelName}\n        </span>\n        <span style=\"color: #9CA3AF; font-size: 12px; margin-left: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;\">\n          ELO: ${puzzle.rating}\n        </span>\n      </div>\n    </div>\n\n    <a href=\"${puzzleUrl}\" style=\"background: linear-gradient(135deg, #a0d660 0%, #82b644 100%); color: #141311; padding: 20px 40px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 16px; display: inline-block; letter-spacing: 0.05em;\">\n      DÉBUTER L'ANALYSE\n    </a>\n    \n    <div style=\"margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;\">\n      <p style=\"color: #4B5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;\">\n        Chess Platform | The Grandmaster\\'s Study\n      </p>\n    </div>\n  </div>\n</div>\n`;\n\nreturn { email: user.email, htmlBody: html, subject: `Challenge Quotidien [${levelName}] — Chess Platform` };"
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Rendu HTML Débutant",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const level = 'intermediate';\nconst levelName = 'Intermédiaire';\nconst user = $node[\"Boucle par User\"].json;\nconst puzzlesData = $node[\"🧩 Générer Puzzles du Jour\"].json;\n\nconst puzzles = puzzlesData.puzzles || puzzlesData;\nconst puzzle = puzzles[level];\n\nconst boardImageUrl = `https://fen2image.chessvision.ai/?fen=${encodeURIComponent(puzzle.fen)}`;\nconst puzzleUrl = `http://localhost:3000/puzzle?id=${puzzle.id}`;\n\nconst html = `\n<div style=\"background-color: #141311; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 60px 20px; text-align: center;\">\n  <div style=\"max-width: 600px; margin: 0 auto;\">\n    <h1 style=\"color: #a0d660; font-size: 32px; letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 800; text-transform: uppercase;\">Tactical Precision</h1>\n    \n    <p style=\"font-size: 18px; color: #E5E7EB; line-height: 1.6; margin-bottom: 40px;\">\n      Bonjour <b>${user.username}</b>,<br/>\n      Affûtez votre ligne tactique avec ce puzzle intermédiaire.\n    </p>\n    \n    <div style=\"background-color: #1c1a17; padding: 32px; border-radius: 12px; margin-bottom: 40px;\">\n      <img src=\"${boardImageUrl}\" width=\"100%\" style=\"max-width: 400px; border-radius: 4px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4);\" />\n      \n      <div style=\"margin-top: 24px;\">\n        <span style=\"color: #a0d660; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(160, 214, 96, 0.1); padding: 4px 12px; border-radius: 9999px;\">\n          Niveau: ${levelName}\n        </span>\n        <span style=\"color: #9CA3AF; font-size: 12px; margin-left: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;\">\n          ELO: ${puzzle.rating}\n        </span>\n      </div>\n    </div>\n\n    <a href=\"${puzzleUrl}\" style=\"background: linear-gradient(135deg, #a0d660 0%, #82b644 100%); color: #141311; padding: 20px 40px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 16px; display: inline-block; letter-spacing: 0.05em;\">\n      DÉBUTER L'ANALYSE\n    </a>\n    \n    <div style=\"margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;\">\n      <p style=\"color: #4B5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;\">\n        Chess Platform | The Grandmaster\\'s Study\n      </p>\n    </div>\n  </div>\n</div>\n`;\n\nreturn { email: user.email, htmlBody: html, subject: `Challenge Quotidien [${levelName}] — Chess Platform` };"
+      },
+      "id": "g1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Rendu HTML Inter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const level = 'expert';\nconst levelName = 'Expert';\nconst user = $node[\"Boucle par User\"].json;\nconst puzzlesData = $node[\"🧩 Générer Puzzles du Jour\"].json;\n\nconst puzzles = puzzlesData.puzzles || puzzlesData;\nconst puzzle = puzzles[level];\n\nconst boardImageUrl = `https://fen2image.chessvision.ai/?fen=${encodeURIComponent(puzzle.fen)}`;\nconst puzzleUrl = `http://localhost:3000/puzzle?id=${puzzle.id}`;\n\nconst html = `\n<div style=\"background-color: #141311; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 60px 20px; text-align: center;\">\n  <div style=\"max-width: 600px; margin: 0 auto;\">\n    <h1 style=\"color: #a0d660; font-size: 32px; letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 800; text-transform: uppercase;\">Tactical Precision</h1>\n    \n    <p style=\"font-size: 18px; color: #E5E7EB; line-height: 1.6; margin-bottom: 40px;\">\n      Bonjour <b>${user.username}</b>,<br/>\n      Un défi digne d\\'un Grand Maître vous attend. Saurez-vous trouver le coup gagnant ?\n    </p>\n    \n    <div style=\"background-color: #1c1a17; padding: 32px; border-radius: 12px; margin-bottom: 40px;\">\n      <img src=\"${boardImageUrl}\" width=\"100%\" style=\"max-width: 400px; border-radius: 4px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4);\" />\n      \n      <div style=\"margin-top: 24px;\">\n        <span style=\"color: #a0d660; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(160, 214, 96, 0.1); padding: 4px 12px; border-radius: 9999px;\">\n          Niveau: ${levelName}\n        </span>\n        <span style=\"color: #9CA3AF; font-size: 12px; margin-left: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;\">\n          ELO: ${puzzle.rating}\n        </span>\n      </div>\n    </div>\n\n    <a href=\"${puzzleUrl}\" style=\"background: linear-gradient(135deg, #a0d660 0%, #82b644 100%); color: #141311; padding: 20px 40px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 16px; display: inline-block; letter-spacing: 0.05em;\">\n      DÉBUTER L'ANALYSE\n    </a>\n    \n    <div style=\"margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;\">\n      <p style=\"color: #4B5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;\">\n        Chess Platform | The Grandmaster\\'s Study\n      </p>\n    </div>\n  </div>\n</div>\n`;\n\nreturn { email: user.email, htmlBody: html, subject: `Challenge Quotidien [${levelName}] — Chess Platform` };"
+      },
+      "id": "i1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Rendu HTML Expert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 600]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.htmlBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "h1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Envoyer Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1680, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "j1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Fin de Boucle",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1900, 400]
+    }
+  ],
+  "connections": {
+    "Cron 7h00": {
+      "main": [
+        [
+          {
+            "node": "🧩 Générer Puzzles du Jour",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧩 Générer Puzzles du Jour": {
+      "main": [
+        [
+          {
+            "node": "Récupérer Utilisateurs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Récupérer Utilisateurs": {
+      "main": [
+        [
+          {
+            "node": "Boucle par User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Boucle par User": {
+      "main": [
+        [
+          {
+            "node": "Routing Niveau",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing Niveau": {
+      "main": [
+        [
+          {
+            "node": "Rendu HTML Débutant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rendu HTML Inter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rendu HTML Expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rendu HTML Débutant": {
+      "main": [
+        [
+          {
+            "node": "Envoyer Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rendu HTML Inter": {
+      "main": [
+        [
+          {
+            "node": "Envoyer Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rendu HTML Expert": {
+      "main": [
+        [
+          {
+            "node": "Envoyer Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer Email": {
+      "main": [
+        [
+          {
+            "node": "Fin de Boucle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fin de Boucle": {
+      "main": [
+        [
+          {
+            "node": "Boucle par User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

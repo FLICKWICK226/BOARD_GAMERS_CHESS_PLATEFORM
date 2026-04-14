@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scratch utility scripts — not production code
+    "scratch/**",
+    // Claude CLI worktrees — managed externally
+    ".claude/**",
+    // HTML email templates require inline CSS for Gmail/Outlook compatibility
+    "src/lib/mail/templates/**",
   ]),
 ]);
 

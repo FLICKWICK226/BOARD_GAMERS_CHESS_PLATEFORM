@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Chess, Square } from 'chess.js';
+import { useState, useCallback } from 'react';
+import { Chess } from 'chess.js';
 import { useStockfish, EngineLevel } from './use-stockfish';
 import { useSoundEffects } from './use-sound-effects';
 
@@ -24,14 +24,14 @@ export function useChessGame({ level, onGameOver }: UseChessGameProps) {
             onGameOver?.(getGameResult(newGame));
           }
         }
-      } catch (e) {
-        console.error('Invalid bot move:', move, e);
+      } catch (_e) {
+        console.error('Invalid bot move:', move, _e);
       }
       return newGame;
     });
   }, [onGameOver, playSound]);
 
-  const { findBestMove, thinking, isReady } = useStockfish({
+  const { findBestMove, thinking, isReady, error: engineError } = useStockfish({
     level,
     onBestMove: handleBotMove,
   });
@@ -57,7 +57,7 @@ export function useChessGame({ level, onGameOver }: UseChessGameProps) {
         }
         return true;
       }
-    } catch (e) {
+    } catch {
       return false;
     }
     return false;
@@ -87,6 +87,7 @@ export function useChessGame({ level, onGameOver }: UseChessGameProps) {
     undoMove,
     thinking,
     isReady,
+    engineError,
     turn: game.turn(),
     isGameOver: game.isGameOver(),
   };

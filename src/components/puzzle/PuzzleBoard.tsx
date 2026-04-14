@@ -100,21 +100,22 @@ export function PuzzleBoard({
 
   return (
     <div className={`
-      relative w-full aspect-square max-w-[500px] mx-auto 
+      relative w-full aspect-square max-w-[500px] mx-auto
       transition-all duration-300
       ${status === 'wrong' ? 'animate-shake' : ''}
     `}>
       <Chessboard
-        // @ts-expect-error - position prop is missing in some types but works in runtime
-        position={fen}
-        onPieceDrop={onPieceDrop}
-        boardOrientation={orientation}
-        customDarkSquareStyle={boardStyles.darkSquareStyle}
-        customLightSquareStyle={boardStyles.lightSquareStyle}
-        customBoardStyle={boardStyles.boardStyle}
-        customSquareStyles={customSquareStyles}
-        customArrows={customArrows}
-        animationDuration={300}
+        options={{
+          position: fen,
+          onPieceDrop,
+          boardOrientation: orientation,
+          darkSquareStyle: boardStyles.darkSquareStyle,
+          lightSquareStyle: boardStyles.lightSquareStyle,
+          boardStyle: boardStyles.boardStyle,
+          squareStyles: customSquareStyles,
+          arrows: customArrows?.map(([startSquare, endSquare, color]) => ({ startSquare, endSquare, color })),
+          animationDurationInMs: 300,
+        }}
       />
       
       {/* Overlay for status */}

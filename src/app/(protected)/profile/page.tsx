@@ -48,7 +48,8 @@ export default async function ProfilePage() {
   const historyCount = rawHistory?.length || 0
   const successRate = historyCount > 0 ? Math.round((totalSolved / historyCount) * 100) : 0
   
-  const puzzleHistory = (rawHistory || []).map((att: any, idx) => ({
+  type PuzzleAttemptRaw = { solved: boolean; created_at: string; time_spent_seconds: number; daily_content?: { level?: string; lichess_id?: string } | null }
+  const puzzleHistory = (rawHistory as PuzzleAttemptRaw[] || []).map((att, idx) => ({
     id: idx,
     name: `Puzzle #${att.daily_content?.lichess_id || 'Global'}`,
     difficulty: att.daily_content?.level || 'beginner',
@@ -162,7 +163,7 @@ export default async function ProfilePage() {
               </div>
             )) : (
               <div className="py-20 text-center">
-                <p className="text-sm text-muted-foreground">Résolvez votre premier puzzle pour voir l'historique !</p>
+                <p className="text-sm text-muted-foreground">R&eacute;solvez votre premier puzzle pour voir l&apos;historique !</p>
               </div>
             )}
           </div>

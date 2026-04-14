@@ -29,7 +29,7 @@ export function LevelSelector({ currentLevel }: LevelSelectorProps) {
       } else {
         alert('Erreur: ' + result.error)
       }
-    } catch (e) {
+    } catch {
       alert('Une erreur est survenue.')
     } finally {
       setLoading(null)

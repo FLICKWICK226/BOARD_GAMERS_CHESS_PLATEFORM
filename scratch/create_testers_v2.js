@@ -1,14 +1,21 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://jxkyfemkwlnwnskpxmcu.supabase.co';
-const supabaseKey = 'sb_publishable_KH28Nu8TjLubWCdiE_d4Qw_eyHaQOHo';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://jxkyfemkwlnwnskpxmcu.supabase.co';
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || '';
+const testerPassword = process.env.TESTER_PASSWORD;
+
+if (!testerPassword) {
+  console.error('ERROR: TESTER_PASSWORD env variable is required.');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function createTester(email, level) {
     console.log(`Creating tester: ${email}...`);
     const { data, error } = await supabase.auth.signUp({
       email,
-      password: 'Password123!',
+      password: testerPassword,
       options: {
         data: { level }
       }

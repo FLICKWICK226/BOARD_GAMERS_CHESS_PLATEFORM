@@ -1,13 +1,20 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://jxkyfemkwlnwnskpxmcu.supabase.co';
-const supabaseKey = 'sb_publishable_KH28Nu8TjLubWCdiE_d4Qw_eyHaQOHo';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://jxkyfemkwlnwnskpxmcu.supabase.co';
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || '';
+const testerPassword = process.env.TESTER_PASSWORD;
+
+if (!testerPassword) {
+  console.error('ERROR: TESTER_PASSWORD env variable is required. Run: TESTER_PASSWORD=... node scratch/create_testers.js');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const testers = [
-  { email: 'beginner_tester@chess.com', password: 'Password123!', level: 'beginner' },
-  { email: 'intermediate_tester@chess.com', password: 'Password123!', level: 'intermediate' },
-  { email: 'expert_tester@chess.com', password: 'Password123!', level: 'expert' }
+  { email: 'beginner_tester@chess.com', level: 'beginner' },
+  { email: 'intermediate_tester@chess.com', level: 'intermediate' },
+  { email: 'expert_tester@chess.com', level: 'expert' }
 ];
 
 async function createTesters() {
@@ -15,7 +22,7 @@ async function createTesters() {
     console.log(`Creating tester: ${tester.email}...`);
     const { data, error } = await supabase.auth.signUp({
       email: tester.email,
-      password: tester.password,
+      password: testerPassword,
       options: {
         data: {
           level: tester.level

@@ -156,6 +156,7 @@ export default function PlayPage() {
             <div className="flex-1 max-w-md w-full space-y-4">
               <input 
                 type="range"
+                aria-label={`Niveau UCI pour ${activeLevelData.label}`}
                 min={LEVEL_RANGES[selectedCategory].min}
                 max={LEVEL_RANGES[selectedCategory].max}
                 step="1"

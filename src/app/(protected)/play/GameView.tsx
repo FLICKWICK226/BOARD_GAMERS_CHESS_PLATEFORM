@@ -20,19 +20,15 @@ export function GameView({ level, onBack }: GameViewProps) {
     undoMove, 
     thinking, 
     isReady,
-    isGameOver 
+    engineError,
   } = useChessGame({
     level,
     onGameOver: (result) => setGameResult(result),
   });
 
-  function onDrop(sourceSquare: string, targetSquare: string) {
-    const move = makeMove({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: 'q', // Always promote to queen for simplicity
-    });
-    return move;
+  function onDrop({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null }) {
+    if (!targetSquare) return false;
+    return makeMove({ from: sourceSquare, to: targetSquare, promotion: 'q' }) ?? false;
   }
 
   return (
@@ -64,12 +60,17 @@ export function GameView({ level, onBack }: GameViewProps) {
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Statut :</span>
-              <span className={`font-medium ${isReady ? 'text-green-400' : 'text-yellow-400'}`}>
-                {isReady ? (thinking ? 'Réflexion...' : 'En attente') : 'Initialisation...'}
+              <span className={`font-medium ${engineError ? 'text-red-400' : isReady ? 'text-green-400' : 'text-yellow-400'}`}>
+                {engineError ? 'Erreur' : isReady ? (thinking ? 'Réflexion...' : 'En attente') : 'Initialisation...'}
               </span>
             </div>
             
-            {!isReady && (
+            {engineError ? (
+              <div className="flex items-center gap-2 text-[10px] text-red-400/80 bg-red-400/5 p-2 rounded border border-red-400/10">
+                <AlertCircle className="w-3 h-3" />
+                {engineError}
+              </div>
+            ) : !isReady && (
               <div className="flex items-center gap-2 text-[10px] text-yellow-400/80 bg-yellow-400/5 p-2 rounded border border-yellow-400/10">
                 <AlertCircle className="w-3 h-3" />
                 Chargement du moteur WASM...
@@ -102,15 +103,18 @@ export function GameView({ level, onBack }: GameViewProps) {
       <div className="lg:col-span-6 order-1 lg:order-2">
         <div className="relative aspect-square max-w-[600px] mx-auto group">
           <div className="absolute -inset-2 bg-gradient-to-b from-primary/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="relative rounded-xl overflow-hidden border border-white/5 shadow-2xl">
-            <Chessboard 
-              // @ts-expect-error - position prop is missing in some types but works in runtime
-              position={fen} 
-              onPieceDrop={onDrop}
-              boardOrientation="white"
-              customDarkSquareStyle={{ backgroundColor: '#2d333b' }}
-              customLightSquareStyle={{ backgroundColor: '#e6edf3' }}
-              animationDuration={300}
+          <div 
+            className="relative rounded-xl overflow-hidden border border-white/5 shadow-2xl touch-none"
+          >
+            <Chessboard
+              options={{
+                position: fen,
+                onPieceDrop: onDrop,
+                boardOrientation: 'white',
+                darkSquareStyle: { backgroundColor: '#2d333b' },
+                lightSquareStyle: { backgroundColor: '#e6edf3' },
+                animationDurationInMs: 300,
+              }}
             />
           </div>
 
@@ -144,7 +148,7 @@ export function GameView({ level, onBack }: GameViewProps) {
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Historique</h3>
           <div className="flex-1 flex items-center justify-center text-center p-4">
             <p className="text-xs text-muted-foreground italic">
-              Les coups s'afficheront ici lors d'une prochaine mise à jour.
+              Les coups s&apos;afficheront ici lors d&apos;une prochaine mise &agrave; jour.
             </p>
           </div>
         </div>
