@@ -20,6 +20,15 @@ interface UsePuzzleEngineProps {
 // Standard starting FEN — safe fallback when puzzle hasn't loaded yet
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
+// Convert a UCI string like 'e2e4' or 'e7e8q' to a chess.js move object
+function parseUci(uci: string): { from: string; to: string; promotion?: string } {
+  return {
+    from: uci.substring(0, 2),
+    to: uci.substring(2, 4),
+    ...(uci.length > 4 ? { promotion: uci[4] } : {}),
+  }
+}
+
 export function usePuzzleEngine({
   initialFen,
   solution,
@@ -94,7 +103,7 @@ export function usePuzzleEngine({
             setTimeout(() => {
               const computerMoveUci = solution[nextIndex]
               const nextGameCopy = new Chess(gameCopy.fen())
-              const compResult = nextGameCopy.move(computerMoveUci)
+              const compResult = nextGameCopy.move(parseUci(computerMoveUci))
               
               if (compResult) {
                 setGame(nextGameCopy)
@@ -166,7 +175,7 @@ export function usePuzzleEngine({
         // Use functional update for game to ensure we always use latest state in the timeout chain
         setGame((prevGame) => {
           const gameCopy = new Chess(prevGame.fen())
-          const result = gameCopy.move(moveUci)
+          const result = gameCopy.move(parseUci(moveUci))
           
           if (result) {
             setLastMove({ from: result.from, to: result.to })

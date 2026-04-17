@@ -27,13 +27,51 @@ export default async function ProfilePage() {
     .eq('id', user.id)
     .single()
 
-  // 2. Fetch Detailed History
+  // 2. Fetch ALL attempts for aggregates (no limit)
+  const { data: allAttempts } = await supabase
+    .from('puzzle_attempts')
+    .select('solved, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  const totalSolved = allAttempts?.filter(a => a.solved).length || 0
+  const totalAttempts = allAttempts?.length || 0
+  const successRate = totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0
+
+  // Compute streak: consecutive days with at least one solved puzzle
+  const streak = (() => {
+    if (!allAttempts || allAttempts.length === 0) return 0
+    const solvedDates = Array.from(new Set(
+      allAttempts
+        .filter(a => a.solved)
+        .map(a => a.created_at.slice(0, 10))
+    )).sort((a, b) => (a < b ? 1 : -1))
+
+    if (solvedDates.length === 0) return 0
+
+    const today = new Date().toISOString().slice(0, 10)
+    const yesterday = new Date(new Date().getTime() - 86400_000).toISOString().slice(0, 10)
+    if (solvedDates[0] !== today && solvedDates[0] !== yesterday) return 0
+
+    let count = 1
+    for (let i = 1; i < solvedDates.length; i++) {
+      const prev = new Date(solvedDates[i - 1])
+      const curr = new Date(solvedDates[i])
+      const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400_000)
+      if (diffDays === 1) count++
+      else break
+    }
+    return count
+  })()
+
+  // 3. Fetch recent history for display (limited)
   const { data: rawHistory } = await supabase
     .from('puzzle_attempts')
     .select(`
       solved,
       created_at,
       time_spent_seconds,
+      attempts_count,
       daily_content:puzzle_id (
         level,
         lichess_id
@@ -42,13 +80,8 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(10)
-
-  // 3. Calculate Aggregates
-  const totalSolved = rawHistory?.filter(p => p.solved).length || 0
-  const historyCount = rawHistory?.length || 0
-  const successRate = historyCount > 0 ? Math.round((totalSolved / historyCount) * 100) : 0
   
-  type PuzzleAttemptRaw = { solved: boolean; created_at: string; time_spent_seconds: number; daily_content?: { level?: string; lichess_id?: string } | null }
+  type PuzzleAttemptRaw = { solved: boolean; created_at: string; time_spent_seconds: number; attempts_count: number; daily_content?: { level?: string; lichess_id?: string } | null }
   const puzzleHistory = (rawHistory as PuzzleAttemptRaw[] || []).map((att, idx) => ({
     id: idx,
     name: `Puzzle #${att.daily_content?.lichess_id || 'Global'}`,
@@ -56,7 +89,7 @@ export default async function ProfilePage() {
     solved: att.solved,
     time: att.solved ? `${Math.floor(att.time_spent_seconds / 60)}m ${att.time_spent_seconds % 60}s` : '—',
     date: new Date(att.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
-    points: att.solved ? (att.daily_content?.level === 'expert' ? 50 : att.daily_content?.level === 'intermediate' ? 30 : 20) : 0
+    points: att.solved ? Math.max(50 - ((att.attempts_count - 1) * 10), 10) : 0
   }))
 
   const totalPoints = puzzleHistory.reduce((acc, p) => acc + p.points, 0)
@@ -109,12 +142,13 @@ export default async function ProfilePage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
-          { icon: Target, label: 'Puzzles tentés', value: historyCount, unit: '', color: 'text-primary' },
+          { icon: Target, label: 'Puzzles résolus', value: totalSolved, unit: '', color: 'text-primary' },
+          { icon: Target, label: 'Puzzles tentés', value: totalAttempts, unit: '', color: 'text-muted-foreground' },
           { icon: TrendingUp, label: 'Taux de succès', value: `${successRate}`, unit: '%', color: 'text-primary' },
           { icon: Trophy, label: 'Points session', value: totalPoints, unit: ' pts', color: 'text-yellow-400' },
-          { icon: Clock, label: 'IA Credits', value: profile?.ai_credits_remaining || 0, unit: '', color: 'text-muted-foreground' },
+          { icon: Clock, label: 'Série', value: streak, unit: ' 🔥', color: 'text-orange-400' },
         ].map(stat => {
           const Icon = stat.icon
           return (
@@ -173,25 +207,35 @@ export default async function ProfilePage() {
         <div className="space-y-4">
           <LevelSelector currentLevel={profile?.level || 'beginner'} />
 
-          {/* Achievements - Placeholders for now */}
-          <div className="bg-surface-container rounded-xl p-5">
+          {/* Next Goals / Roadmap */}
+          <div className="bg-surface-container rounded-xl p-5 border border-primary/5">
             <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground font-medium mb-4">
-              Statut du compte
+              Objectifs & Progression
             </p>
-            <div className="space-y-3">
-              {[
-                { emoji: '🎮', label: 'Joueur Actif', sub: 'Compte validé' },
-                { emoji: '🦾', label: 'Coach IA', sub: 'Disponible' },
-                { emoji: '✨', label: 'Premium', sub: 'Bientôt disponible' },
-              ].map(ach => (
-                <div key={ach.label} className="flex items-center gap-3">
-                  <span className="text-xl">{ach.emoji}</span>
-                  <div>
-                    <p className="text-sm text-foreground font-medium">{ach.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{ach.sub}</p>
-                  </div>
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-surface-high/50 border border-[var(--outline-variant)]/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-lg">🎯</span>
+                  <p className="text-sm font-medium text-foreground">Vers le niveau suivant</p>
                 </div>
-              ))}
+                <div className="w-full bg-surface-high h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-primary h-full transition-all duration-1000" 
+                    style={{ width: `${Math.min(((profile?.rating || 1200) % 200) / 2, 100)}%` }} 
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Gagnez encore {200 - ((profile?.rating || 1200) % 200)} points pour atteindre le palier supérieur.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 opacity-50">
+                <span className="text-xl">🏆</span>
+                <div>
+                  <p className="text-sm text-foreground font-medium">Tournois</p>
+                  <p className="text-[10px] text-muted-foreground">Bientôt disponible</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

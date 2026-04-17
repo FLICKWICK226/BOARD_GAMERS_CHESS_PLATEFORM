@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signUp } from '@/app/actions/auth'
 
 export default function RegisterPage() {
@@ -60,23 +61,25 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-700/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#92c753]/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#6a9a3a]/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="w-full max-w-xl relative z-10">
         {/* Logo / Header */}
         <div className="text-center mb-10">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-amber-500 blur-2xl opacity-20 animate-pulse" />
-            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 mb-6 shadow-2xl rotate-3 transform transition-transform hover:rotate-0">
-              <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-              </svg>
-            </div>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/logo.png"
+              alt="EPO Board Gamer — Chess Section"
+              width={450}
+              height={120}
+              className="w-[320px] sm:w-[420px] md:w-[450px] h-auto"
+              priority
+            />
           </div>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
-            Rejoignez <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Board Chess</span>
+            Rejoignez <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a8d468] to-[#92c753]">EPO Board Gamer</span>
           </h1>
           <p className="text-gray-400 text-lg">Prêt à relever le défi ?</p>
         </div>
@@ -98,7 +101,7 @@ export default function RegisterPage() {
                     required
                     autoComplete="email"
                     placeholder="vous@exemple.com"
-                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all duration-300"
+                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/40 focus:border-[#92c753]/50 transition-all duration-300"
                   />
                 </div>
 
@@ -114,7 +117,7 @@ export default function RegisterPage() {
                     minLength={6}
                     autoComplete="new-password"
                     placeholder="6+ caractères"
-                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all duration-300"
+                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/40 focus:border-[#92c753]/50 transition-all duration-300"
                   />
                 </div>
 
@@ -130,7 +133,7 @@ export default function RegisterPage() {
                     minLength={6}
                     autoComplete="new-password"
                     placeholder="Confirmation"
-                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all duration-300"
+                    className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/40 focus:border-[#92c753]/50 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -148,12 +151,12 @@ export default function RegisterPage() {
                       onClick={() => setLevel(l.id)}
                       className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left ${
                         level === l.id
-                          ? 'bg-amber-500/10 border-amber-500/50 shadow-inner'
+                          ? 'bg-[#92c753]/10 border-[#92c753]/50 shadow-inner'
                           : 'bg-gray-800/20 border-gray-700/30 hover:bg-gray-800/40 hover:border-gray-600/50'
                       }`}
                     >
                       <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                        level === l.id ? 'bg-amber-500 text-white' : 'bg-gray-700/50 text-gray-400'
+                        level === l.id ? 'bg-[#92c753] text-white' : 'bg-gray-700/50 text-gray-400'
                       }`}>
                         {l.icon}
                       </div>
@@ -167,7 +170,7 @@ export default function RegisterPage() {
                       </div>
                       {level === l.id && (
                         <div className="ml-auto">
-                          <svg className="w-5 h-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="w-5 h-5 text-[#92c753]" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -192,11 +195,11 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-xl shadow-amber-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0"
+              className="w-full py-4 px-6 bg-gradient-to-r from-[#92c753] to-[#7db345] hover:from-[#a8d468] hover:to-[#92c753] text-[#152800] font-bold text-lg rounded-2xl shadow-xl shadow-[#92c753]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-[#152800]" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
@@ -214,7 +217,7 @@ export default function RegisterPage() {
               Déjà un compte ?{' '}
               <Link
                 href="/login"
-                className="text-amber-500 hover:text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4 transition-colors"
+                className="text-[#92c753] hover:text-[#a8d468] font-bold underline decoration-[#92c753]/30 underline-offset-4 transition-colors"
               >
                 Connectez-vous ici
               </Link>

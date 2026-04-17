@@ -141,6 +141,7 @@ export async function POST(request: Request) {
       {
         puzzle_date: today,
         level: 'expert',
+        puzzle_number: 1,
         lichess_id: puzzle.id,
         lichess_game_id: game.id,
         fen: puzzle.fen,
@@ -153,7 +154,7 @@ export async function POST(request: Request) {
         players: game.players,
         fetched_at: new Date().toISOString(),
       },
-      { onConflict: 'puzzle_date,level' }
+      { onConflict: 'puzzle_date,level,puzzle_number' }
     )
 
     if (error) throw new Error(error.message)
@@ -172,6 +173,7 @@ export async function POST(request: Request) {
       {
         puzzle_date: today,
         level: 'intermediate',
+        puzzle_number: 1,
         lichess_id: puzzle.id,
         lichess_game_id: game?.id ?? null,
         fen: puzzle.fen,
@@ -184,7 +186,7 @@ export async function POST(request: Request) {
         players: game?.players ?? null,
         fetched_at: new Date().toISOString(),
       },
-      { onConflict: 'puzzle_date,level' }
+      { onConflict: 'puzzle_date,level,puzzle_number' }
     )
 
     if (error) throw new Error(error.message)
@@ -203,6 +205,7 @@ export async function POST(request: Request) {
       {
         puzzle_date: today,
         level: 'beginner',
+        puzzle_number: 1,
         lichess_id: puzzle.id,
         lichess_game_id: game?.id ?? null,
         fen: puzzle.fen,
@@ -215,7 +218,7 @@ export async function POST(request: Request) {
         players: game?.players ?? null,
         fetched_at: new Date().toISOString(),
       },
-      { onConflict: 'puzzle_date,level' }
+      { onConflict: 'puzzle_date,level,puzzle_number' }
     )
 
     if (error) throw new Error(error.message)
@@ -253,10 +256,24 @@ export async function GET() {
     .select('*')
     .eq('puzzle_date', today)
     .order('level')
+    .order('puzzle_number')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ puzzle_date: today, puzzles: data })
+  // Group by level for convenient frontend consumption
+  const grouped: Record<string, typeof data> = {}
+  for (const row of data ?? []) {
+    const lvl = row.level as string
+    if (!grouped[lvl]) grouped[lvl] = []
+    grouped[lvl]!.push(row)
+  }
+
+  return NextResponse.json({
+    puzzle_date: today,
+    per_level: 10,
+    puzzles: data,
+    by_level: grouped,
+  })
 }

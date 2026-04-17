@@ -82,6 +82,7 @@ export function useChessGame({ level, onGameOver }: UseChessGameProps) {
   return {
     game,
     fen: game.fen(),
+    moveHistory: game.history(),      // SAN strings: ['e4', 'e5', 'Nf3', ...]
     makeMove,
     resetGame,
     undoMove,

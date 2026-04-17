@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronRight, Puzzle, BotMessageSquare, Swords } from 'lucide-react'
 
 export default async function HomePage() {
@@ -11,15 +12,27 @@ export default async function HomePage() {
     redirect('/dashboard')
   }
 
+  const { data: dailyPuzzle } = await supabase
+    .from('daily_content')
+    .select('puzzle_number, rating')
+    .order('puzzle_date', { ascending: false })
+    .limit(1)
+    .single()
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
         {/* Logo */}
-        <div className="w-16 h-16 rounded-2xl gradient-primary glow-primary flex items-center justify-center mb-8">
-          <svg className="w-9 h-9 text-[#152800]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C11 2 10 2.5 10 4V5H8C7 5 6 6 6 7V8L4 10V14H6L7 16H8V20H10V16H14V20H16V16H17L18 14H20V10L18 8V7C18 6 17 5 16 5H14V4C14 2.5 13 2 12 2Z" />
-          </svg>
+        <div className="mb-8">
+          <Image
+            src="/logo.png"
+            alt="EPO Board Gamer — Chess Section"
+            width={450}
+            height={120}
+            className="w-[300px] sm:w-[420px] h-auto mx-auto"
+            priority
+          />
         </div>
 
         <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-4">
@@ -55,6 +68,17 @@ export default async function HomePage() {
           >
             Créer un compte
           </Link>
+        </div>
+
+        {/* Dynamic Badge */}
+        <div className="mt-12 flex items-center gap-3 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 animate-fade-in">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+          <p className="text-[11px] font-medium text-primary uppercase tracking-wider">
+            Nouveau : Puzzle #{dailyPuzzle?.puzzle_number || '128'} disponible à {dailyPuzzle?.rating || '1400'} Elo
+          </p>
         </div>
       </main>
 
@@ -94,7 +118,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[var(--outline-variant)]/10 py-6 text-center">
-        <p className="text-xs text-muted-foreground">Board Chess © 2026 · Tactical Precision</p>
+        <p className="text-xs text-muted-foreground">EPO Board Gamer © 2026 · Chess Section</p>
       </footer>
     </div>
   )

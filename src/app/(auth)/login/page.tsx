@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from '@/app/actions/auth'
 
@@ -24,15 +25,20 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo / Header */}
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 mb-4 shadow-lg shadow-amber-500/20">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-            </svg>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="EPO Board Gamer — Chess Section"
+              width={450}
+              height={120}
+              className="w-[320px] sm:w-[420px] md:w-[450px] h-auto"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            Board <span className="text-amber-500">Chess</span>
+            EPO <span className="text-[#92c753]">Board Gamer</span>
           </h1>
           <p className="text-gray-400 mt-2 text-sm">Connectez-vous à votre compte</p>
         </div>
@@ -40,7 +46,7 @@ function LoginForm() {
         {/* Form Card */}
         <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 shadow-xl">
           {message && (
-            <div className="mb-6 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-500 text-sm">
+            <div className="mb-6 bg-[#92c753]/10 border border-[#92c753]/30 rounded-xl px-4 py-3 text-[#92c753] text-sm">
               {message}
             </div>
           )}
@@ -57,7 +63,7 @@ function LoginForm() {
                 required
                 autoComplete="email"
                 placeholder="vous@exemple.com"
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/50 focus:border-[#92c753] transition-all duration-200"
               />
             </div>
 
@@ -73,7 +79,7 @@ function LoginForm() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/50 focus:border-[#92c753] transition-all duration-200"
               />
             </div>
 
@@ -88,7 +94,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#92c753] to-[#7db345] hover:from-[#a8d468] hover:to-[#92c753] text-[#152800] font-semibold rounded-xl shadow-lg shadow-[#92c753]/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#92c753]/50"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -110,7 +116,7 @@ function LoginForm() {
               Pas encore de compte ?{' '}
               <Link
                 href="/register"
-                className="text-amber-500 hover:text-amber-400 font-medium transition-colors"
+                className="text-[#92c753] hover:text-[#a8d468] font-medium transition-colors"
               >
                 Créer un compte
               </Link>
@@ -126,7 +132,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 text-amber-500" />
+        <div className="animate-spin h-8 w-8 text-[#92c753]" />
       </div>
     }>
       <LoginForm />

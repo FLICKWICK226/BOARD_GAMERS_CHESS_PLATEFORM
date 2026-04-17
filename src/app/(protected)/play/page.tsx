@@ -67,11 +67,14 @@ export default function PlayPage() {
     depth: LEVEL_RANGES[selectedCategory].depth
   } : null
 
+  const timeMap: Record<string, number> = { blitz: 300, rapid: 600, classic: 1800 }
+
   if (isPlaying && selectedLevel) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <GameView 
           level={selectedLevel} 
+          timeSeconds={timeMap[selectedTime] || 600}
           onBack={() => setIsPlaying(false)} 
         />
       </div>

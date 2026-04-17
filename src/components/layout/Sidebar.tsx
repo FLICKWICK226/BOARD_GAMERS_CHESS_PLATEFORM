@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
@@ -26,20 +27,17 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 min-h-screen glass border-r border-[var(--outline-variant)]/15 fixed left-0 top-0 z-40">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-6">
-          <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center glow-primary">
-            <svg className="w-5 h-5 text-[#152800]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C11 2 10 2.5 10 4V5H8C7 5 6 6 6 7V8L4 10V14H6L7 16H8V20H10V16H14V20H16V16H17L18 14H20V10L18 8V7C18 6 17 5 16 5H14V4C14 2.5 13 2 12 2Z" />
-            </svg>
-          </div>
-          <div>
-            <span className="text-base font-semibold text-foreground tracking-tight">
-              Board <span className="text-primary">Chess</span>
-            </span>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Tactical Precision
-            </p>
-          </div>
+        <div className="flex items-center px-5 py-5 border-b border-[var(--outline-variant)]/10">
+          <Link href="/dashboard">
+            <Image
+              src="/logo.png"
+              alt="EPO Board Gamer — Chess Section"
+              width={450}
+              height={120}
+              className="w-full max-w-[190px] h-auto"
+              priority
+            />
+          </Link>
         </div>
 
         {/* Navigation */}

@@ -1,19 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Lightbulb, Eye, ChevronRight, Loader2, Trophy, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePuzzleEngine } from '@/hooks/use-puzzle-engine'
 import { PuzzleBoard } from '@/components/puzzle/PuzzleBoard'
 import { calculateLevelFromRating, PuzzleLevel } from '@/lib/utils/puzzle-utils'
 import { CompletionOverlay } from '@/components/puzzle/CompletionOverlay'
+import { Chess } from 'chess.js'
 
 interface DailyPuzzle {
   id: string
   puzzle_date: string
   level: 'beginner' | 'intermediate' | 'expert'
+  puzzle_number: number
   lichess_id: string
   fen: string
+  last_move: string
   solution: string[]
   rating: number
   themes: string[]
@@ -25,13 +28,18 @@ export default function PuzzlePage() {
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [puzzle, setPuzzle] = useState<DailyPuzzle | null>(null)
+  const [puzzles, setPuzzles] = useState<DailyPuzzle[]>([])
+  const [puzzleIndex, setPuzzleIndex] = useState(0)
   const [level, setLevel] = useState<PuzzleLevel>('beginner')
   const [userRating, setUserRating] = useState<number | null>(null)
   const [ratingGain, setRatingGain] = useState<number | null>(null)
   const [earnedPoints, setEarnedPoints] = useState<number>(0)
+  const [streak, setStreak] = useState<number>(0)
   const [showHint, setShowHint] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
+
+  // Derive current puzzle from the array
+  const puzzle = puzzles[puzzleIndex] ?? null
 
   const supabase = createClient()
 
@@ -71,7 +79,7 @@ export default function PuzzlePage() {
   useEffect(() => {
     if (profileLoading) return // Wait for profile detection
 
-    async function fetchPuzzle() {
+    async function fetchPuzzles() {
       setLoading(true)
       setError(null)
       setShowHint(false)
@@ -79,40 +87,43 @@ export default function PuzzlePage() {
 
       const today = new Date().toISOString().split('T')[0]
       
-      const { data, error } = await supabase
+      const { data, error: fetchErr } = await supabase
         .from('daily_content')
         .select('*')
         .eq('puzzle_date', today)
         .eq('level', level)
-        .single()
+        .order('puzzle_number')
 
-      if (error) {
-        console.error('Fetch error:', error.message, error.details || '')
+      if (fetchErr || !data || data.length === 0) {
+        console.error('Fetch error:', fetchErr?.message || 'No puzzles found')
         setError("Aucun puzzle disponible pour ce niveau aujourd'hui.")
-        setPuzzle(null)
+        setPuzzles([])
+        setPuzzleIndex(0)
       } else {
-        setPuzzle(data)
-        
-        // Record initial "started" attempt as 'failed' (will be updated on success)
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        const userId = authUser?.id || '00000000-0000-0000-0000-000000000000'
-        
-        await supabase
-          .from('puzzle_attempts')
-          .upsert({
-            user_id: userId,
-            puzzle_id: data.id,
-            status: 'failed',
-            wrong_moves: 0,
-            time_spent: 0,
-            points_awarded: 0
-          }, { onConflict: 'user_id,puzzle_id' })
+        setPuzzles(data as DailyPuzzle[])
+        setPuzzleIndex(0)   // Always start at puzzle #1 when level changes
       }
       setLoading(false)
     }
 
-    fetchPuzzle()
+    fetchPuzzles()
   }, [level, profileLoading, supabase])
+
+  // Lichess puzzles: FEN is the position BEFORE last_move. 
+  // We must apply last_move to get the actual puzzle starting position.
+  const puzzleStartFen = useMemo(() => {
+    if (!puzzle?.fen || !puzzle?.last_move) return puzzle?.fen || ''
+    try {
+      const g = new Chess(puzzle.fen)
+      const from = puzzle.last_move.substring(0, 2)
+      const to = puzzle.last_move.substring(2, 4)
+      const promo = puzzle.last_move.length > 4 ? puzzle.last_move[4] : undefined
+      g.move({ from, to, promotion: promo })
+      return g.fen()
+    } catch {
+      return puzzle.fen  // fallback to raw FEN if last_move is invalid
+    }
+  }, [puzzle?.fen, puzzle?.last_move])
 
   // Initialize engine only when puzzle is loaded
   const { 
@@ -127,15 +138,21 @@ export default function PuzzlePage() {
     customArrows,
     isAutoPlaying
   } = usePuzzleEngine({
-    initialFen: puzzle?.fen || '',
+    initialFen: puzzleStartFen,
     solution: puzzle?.solution || [],
     onComplete: async (stats) => {
       console.log('Puzzle completed!', stats)
       
       // Persist to Supabase
       const { data: { user: authUser } } = await supabase.auth.getUser()
-      const userId = authUser?.id || '00000000-0000-0000-0000-000000000000'
+      const userId = authUser?.id
       const puzzleId = puzzle?.id
+
+      // Guard: only save if we have a valid authenticated user
+      if (!userId) {
+        console.warn('No authenticated user — skipping attempt save')
+        return
+      }
 
       if (puzzleId) {
         // Calculate points: base 50 - mistakes*10 - (hints ? 15 : 0)
@@ -147,14 +164,13 @@ export default function PuzzlePage() {
 
         const { error: saveError } = await supabase
           .from('puzzle_attempts')
-          .upsert({
+          .insert({
             user_id: userId,
             puzzle_id: puzzleId,
-            status: 'success',
-            wrong_moves: stats.wrongMoves,
-            time_spent: stats.timeSpent,
-            points_awarded: points
-          }, { onConflict: 'user_id,puzzle_id' })
+            solved: true,
+            attempts_count: stats.wrongMoves + 1,
+            time_spent_seconds: stats.timeSpent
+          })
 
         if (saveError) console.error('Error saving attempt:', saveError)
 
@@ -173,13 +189,46 @@ export default function PuzzlePage() {
             console.error('Error updating rating:', ratingError)
           }
         }
+
+        // Calculate real streak
+        const { data: allAttempts } = await supabase
+          .from('puzzle_attempts')
+          .select('solved, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+
+        if (allAttempts && allAttempts.length > 0) {
+          const solvedDates = Array.from(new Set(
+            allAttempts
+              .filter(a => a.solved)
+              .map(a => a.created_at.slice(0, 10))
+          )).sort((a, b) => (a < b ? 1 : -1))
+
+          const today = new Date().toISOString().slice(0, 10)
+          const yesterday = new Date(Date.now() - 86400_000).toISOString().slice(0, 10)
+
+          if (solvedDates.length > 0 && (solvedDates[0] === today || solvedDates[0] === yesterday)) {
+            let count = 1
+            for (let i = 1; i < solvedDates.length; i++) {
+              const prev = new Date(solvedDates[i - 1])
+              const curr = new Date(solvedDates[i])
+              const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400_000)
+              if (diffDays === 1) count++
+              else break
+            }
+            setStreak(count)
+          } else {
+            setStreak(1) // Just solved today, fresh streak
+          }
+        } else {
+          setStreak(1)
+        }
       }
     }
   })
 
-  // Determine board orientation (White moves if FEN says 'w', Black if 'b')
-  // Usually Lichess puzzles FEN is set *after* the opponent move, so side to move in FEN is the PLAYER.
-  const boardOrientation = puzzle?.fen.split(' ')[1] === 'w' ? 'white' : 'black'
+  // Board orientation: the player solves as the side to move in the corrected FEN
+  const boardOrientation = puzzleStartFen.split(' ')[1] === 'w' ? 'white' : 'black'
 
   if (profileLoading || loading) {
     return (
@@ -228,6 +277,7 @@ export default function PuzzlePage() {
           <h1 className="text-2xl font-semibold text-foreground tracking-tight">Challenge Tactique</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Niveau : <span className="text-primary font-medium">{level.charAt(0).toUpperCase() + level.slice(1)}</span> &bull; Elo {puzzle.rating}
+            &bull; <span className="text-primary font-medium">{puzzleIndex + 1}/{puzzles.length}</span>
           </p>
         </div>
         
@@ -376,12 +426,50 @@ export default function PuzzlePage() {
               </div>
             )}
 
-            <button
-              onClick={reset}
-              className="w-full flex items-center justify-center py-4 rounded-xl gradient-primary text-[#152800] font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-            >
-              Réinitialiser le puzzle
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={reset}
+                className="flex-1 flex items-center justify-center py-4 rounded-xl bg-surface-high text-foreground font-bold text-sm hover:bg-surface-bright transition-all border border-white/5"
+              >
+                Réinitialiser
+              </button>
+              {puzzleIndex < puzzles.length - 1 && (
+                <button
+                  onClick={() => {
+                    setPuzzleIndex(prev => prev + 1)
+                    setShowHint(false)
+                    setShowSolution(false)
+                    setRatingGain(null)
+                    setEarnedPoints(0)
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl gradient-primary text-[#152800] font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Puzzle suivant <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Progress dots */}
+            <div className="flex items-center justify-center gap-1.5 pt-2">
+              {puzzles.map((_, i) => (
+                <button
+                  key={i}
+                  aria-label={`Puzzle ${i + 1}${i === puzzleIndex ? ' (en cours)' : ''}`}
+                  onClick={() => {
+                    setPuzzleIndex(i)
+                    setShowHint(false)
+                    setShowSolution(false)
+                    setRatingGain(null)
+                    setEarnedPoints(0)
+                  }}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    i === puzzleIndex 
+                      ? 'bg-primary scale-125' 
+                      : 'bg-surface-high hover:bg-surface-bright'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -391,10 +479,18 @@ export default function PuzzlePage() {
           points={earnedPoints}
           ratingGain={ratingGain}
           newRating={userRating}
+          streak={streak}
           onReset={() => {
             reset()
             setRatingGain(null)
           }}
+          onNext={puzzleIndex < puzzles.length - 1 ? () => {
+            setPuzzleIndex(prev => prev + 1)
+            setShowHint(false)
+            setShowSolution(false)
+            setRatingGain(null)
+            setEarnedPoints(0)
+          } : undefined}
         />
       )}
     </div>

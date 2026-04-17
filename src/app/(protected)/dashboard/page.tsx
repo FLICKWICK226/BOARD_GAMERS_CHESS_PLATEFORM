@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { TrendingUp, Trophy, ChevronRight, Check, AlertCircle } from 'lucide-react'
+import { TrendingUp, Trophy, ChevronRight, Check, AlertCircle, Puzzle } from 'lucide-react'
 
 
 
@@ -33,6 +33,41 @@ export default async function DashboardPage() {
   const totalAttempts = attempts?.length || 0
   const successRate = totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0
   const currentRating = profile?.rating || 1200
+
+  // 3. Fetch latest puzzle for the preview card
+  const { data: latestPuzzle } = await supabase
+    .from('daily_content')
+    .select('*')
+    .order('puzzle_date', { ascending: false })
+    .limit(1)
+    .single()
+
+  // 4. Compute streak: consecutive days the user solved at least one puzzle
+  const streak = (() => {
+    if (!attempts || attempts.length === 0) return 0
+    const solvedDates = Array.from(new Set(
+      attempts
+        .filter(a => a.solved)
+        .map(a => a.created_at.slice(0, 10)) // YYYY-MM-DD
+    )).sort((a, b) => (a < b ? 1 : -1))  // desc
+
+    if (solvedDates.length === 0) return 0
+
+    const today = new Date().toISOString().slice(0, 10)
+    // Allow today OR yesterday as chain start (user may not have solved today yet)
+    const yesterday = new Date(new Date().getTime() - 86400_000).toISOString().slice(0, 10)
+    if (solvedDates[0] !== today && solvedDates[0] !== yesterday) return 0
+
+    let count = 1
+    for (let i = 1; i < solvedDates.length; i++) {
+      const prev = new Date(solvedDates[i - 1])
+      const curr = new Date(solvedDates[i])
+      const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400_000)
+      if (diffDays === 1) count++
+      else break
+    }
+    return count
+  })()
 
   // 3. Fetch Recent Puzzles with details
   const { data: recentAttempts } = await supabase
@@ -81,13 +116,13 @@ export default async function DashboardPage() {
 
       {/* Streak + Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Streak Card - Keeping static for now as requested by "fixing others problem" */}
+        {/* Streak Card */}
         <div className="sm:col-span-2 lg:col-span-1 bg-surface-container rounded-xl p-5 flex flex-col gap-3">
           <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground font-medium">Série en cours</p>
           <div className="flex items-center gap-3">
             <span className="text-4xl streak-glow select-none">🔥</span>
             <div>
-              <p className="text-3xl font-bold text-primary leading-none">0</p>
+              <p className="text-3xl font-bold text-primary leading-none">{streak}</p>
               <p className="text-xs text-muted-foreground mt-0.5">jours consécutifs</p>
             </div>
           </div>
@@ -95,11 +130,15 @@ export default async function DashboardPage() {
             {Array.from({ length: 10 }).map((_, i) => (
               <div
                 key={i}
-                className="flex-1 h-1 rounded-full bg-surface-high"
+                className={`flex-1 h-1 rounded-full ${
+                  i < Math.min(streak, 10) ? 'bg-primary' : 'bg-surface-high'
+                }`}
               />
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground">Apprentissage en cours</p>
+          <p className="text-[10px] text-muted-foreground">
+            {streak === 0 ? 'Commence ton premier défi !' : streak >= 7 ? '🏆 Série de feu !' : 'Continue comme ça !'}
+          </p>
         </div>
 
         {/* Stats */}
@@ -134,14 +173,32 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="relative bg-surface-low aspect-[4/3] max-h-72 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Trophy className="w-10 h-10 text-primary" />
+          <div className="relative bg-surface-low aspect-[4/3] max-h-72 flex flex-col items-center justify-center p-8 text-center overflow-hidden">
+            <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center scale-150">
+              <Trophy className="w-64 h-64 text-primary" />
             </div>
-            <p className="text-foreground font-medium mb-2">Améliorez votre Elo Tactique</p>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              Mettez vos comp&eacute;tences &agrave; l&apos;&eacute;preuve avec des puzzles adapt&eacute;s &agrave; votre niveau.
-            </p>
+            
+            <div className="z-10">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Puzzle className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-1">
+                {latestPuzzle ? `Casse-tête #${latestPuzzle.puzzle_number || latestPuzzle.lichess_id}` : 'Défi Quotidien'}
+              </h3>
+              <p className="text-primary font-medium text-sm mb-3">
+                {latestPuzzle ? `Difficulté : ${latestPuzzle.rating} Elo` : 'Améliorez votre Elo Tactique'}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                {(latestPuzzle?.themes || ['tactical', 'precision']).slice(0, 3).map((theme: string) => (
+                  <span key={theme} className="px-2 py-0.5 rounded-md bg-surface-high text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {theme}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                Mettez vos comp&eacute;tences &agrave; l&apos;&eacute;preuve avec ce puzzle s&eacute;lectionn&eacute; pour votre niveau.
+              </p>
+            </div>
           </div>
 
           <div className="p-5 flex items-center justify-between gap-3">

@@ -118,15 +118,7 @@ export function PuzzleBoard({
         }}
       />
       
-      {/* Overlay for status */}
-      {status === 'completed' && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center rounded-lg z-10 animate-fade-in">
-          <div className="bg-surface-container p-6 rounded-xl border border-primary/20 shadow-2xl text-center">
-            <h3 className="text-xl font-bold text-primary mb-1">Puzzle Réussi !</h3>
-            <p className="text-sm text-muted-foreground">Série maintenue : 🔥 5 jours</p>
-          </div>
-        </div>
-      )}
+      {/* Completion is handled by CompletionOverlay in the parent page */}
     </div>
   )
 }

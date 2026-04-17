@@ -9,9 +9,16 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Board Chess — Tactical Precision",
+  title: "EPO Board Gamer — Chess Section",
   description:
     "Plateforme d'échecs premium : puzzles quotidiens, coach IA, et parties contre des bots de tous niveaux.",
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

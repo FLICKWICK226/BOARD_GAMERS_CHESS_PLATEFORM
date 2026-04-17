@@ -17,5 +17,20 @@ export default async function ProtectedLayout({
     redirect('/login')
   }
 
-  return <AppShell email={user.email}>{children}</AppShell>
+  // Fetch real profile for header display
+  const { data: profile } = await supabase
+    .from('users')
+    .select('rating, level')
+    .eq('id', user.id)
+    .single()
+
+  return (
+    <AppShell
+      email={user.email}
+      rating={profile?.rating ?? 1200}
+      level={profile?.level ?? 'beginner'}
+    >
+      {children}
+    </AppShell>
+  )
 }
