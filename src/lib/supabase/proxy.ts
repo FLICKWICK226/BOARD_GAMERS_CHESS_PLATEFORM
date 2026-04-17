@@ -22,7 +22,15 @@ export async function updateSession(request: NextRequest) {
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              // ── Hardened cookie security ──
+              httpOnly: true,                              // Prevent JS access (XSS mitigation)
+              secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+              sameSite: 'lax',                             // 'strict' breaks OAuth redirects
+              path: '/',
+              maxAge: 60 * 60 * 24 * 7,                   // 7 days (matches Supabase JWT lifetime)
+            })
           )
         },
       },
@@ -56,5 +64,15 @@ export async function updateSession(request: NextRequest) {
   // 1. Pass the request in it: const myNewResponse = NextResponse.next({ request })
   // 2. Copy over cookies: myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
   // 3. Return myNewResponse
+
+  // ── Security headers applied to every response ──
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  supabaseResponse.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
+  )
+
   return supabaseResponse
 }
