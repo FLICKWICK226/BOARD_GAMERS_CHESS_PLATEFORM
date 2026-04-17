@@ -6,9 +6,18 @@ import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from '@/app/actions/auth'
 
+// Allowlisted messages — never render arbitrary URL text
+const MSG_MAP: Record<string, string> = {
+  confirm: 'Vérifiez votre email pour confirmer votre inscription.',
+  reset: 'Si ce compte existe, un email de réinitialisation a été envoyé.',
+  error: 'Lien invalide ou expiré. Veuillez réessayer.',
+  updated: 'Mot de passe mis à jour. Connectez-vous.',
+}
+
 function LoginForm() {
   const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const msgCode = searchParams.get('msg')
+  const message = msgCode ? (MSG_MAP[msgCode] ?? null) : null
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -108,6 +117,16 @@ function LoginForm() {
                 'Se connecter'
               )}
             </button>
+
+            {/* Forgot password link */}
+            <p className="text-center text-sm text-gray-500">
+              <Link
+                href="/forgot-password"
+                className="text-[#92c753]/70 hover:text-[#92c753] transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </p>
           </form>
 
           {/* Divider */}

@@ -8,6 +8,7 @@ import { PuzzleBoard } from '@/components/puzzle/PuzzleBoard'
 import { calculateLevelFromRating, PuzzleLevel } from '@/lib/utils/puzzle-utils'
 import { CompletionOverlay } from '@/components/puzzle/CompletionOverlay'
 import { Chess } from 'chess.js'
+import { savePuzzleAttempt } from '@/app/actions/puzzle'
 
 interface DailyPuzzle {
   id: string
@@ -142,87 +143,69 @@ export default function PuzzlePage() {
     solution: puzzle?.solution || [],
     onComplete: async (stats) => {
       console.log('Puzzle completed!', stats)
-      
-      // Persist to Supabase
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      const userId = authUser?.id
-      const puzzleId = puzzle?.id
 
-      // Guard: only save if we have a valid authenticated user
-      if (!userId) {
-        console.warn('No authenticated user — skipping attempt save')
-        return
+      const puzzleId = puzzle?.id
+      if (!puzzleId) return
+
+      // Calculate points client-side (display only)
+      let points = 50 - (stats.wrongMoves * 10)
+      if (showHint) points -= 5
+      if (showSolution) points = 0
+      points = Math.max(points, 10)
+      setEarnedPoints(points)
+
+      // ── Secure server action: identity comes from verified server session ──
+      const result = await savePuzzleAttempt({
+        puzzleId,
+        wrongMoves: stats.wrongMoves,
+        timeSpentSeconds: stats.timeSpent,
+        points,
+        currentRating: userRating ?? 800,
+      })
+
+      if (result.error) {
+        console.error('[puzzle] savePuzzleAttempt error:', result.error)
+      } else {
+        const gain = result.newRating - (userRating ?? 800)
+        setRatingGain(gain)
+        setUserRating(result.newRating)
       }
 
-      if (puzzleId) {
-        // Calculate points: base 50 - mistakes*10 - (hints ? 15 : 0)
-        let points = 50 - (stats.wrongMoves * 10)
-        if (showHint) points -= 5
-        if (showSolution) points = 0
-        points = Math.max(points, 10) // minimum 10 points for completion
-        setEarnedPoints(points)
+      // Calculate streak from Supabase (read-only, anon client is fine)
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
 
-        const { error: saveError } = await supabase
-          .from('puzzle_attempts')
-          .insert({
-            user_id: userId,
-            puzzle_id: puzzleId,
-            solved: true,
-            attempts_count: stats.wrongMoves + 1,
-            time_spent_seconds: stats.timeSpent
-          })
+      const { data: allAttempts } = await supabase
+        .from('puzzle_attempts')
+        .select('solved, created_at')
+        .eq('user_id', authUser.id)
+        .order('created_at', { ascending: false })
 
-        if (saveError) console.error('Error saving attempt:', saveError)
+      if (allAttempts && allAttempts.length > 0) {
+        const solvedDates = Array.from(new Set(
+          allAttempts
+            .filter(a => a.solved)
+            .map(a => a.created_at.slice(0, 10))
+        )).sort((a, b) => (a < b ? 1 : -1))
 
-        // Update User Rating
-        if (userRating !== null && points > 0) {
-          const newRating = userRating + Math.floor(points / 5) // Scale down points to Elo gain
-          const { error: ratingError } = await supabase
-            .from('users')
-            .update({ rating: newRating })
-            .eq('id', userId)
+        const today = new Date().toISOString().slice(0, 10)
+        const yesterday = new Date(Date.now() - 86400_000).toISOString().slice(0, 10)
 
-          if (!ratingError) {
-            setRatingGain(newRating - userRating)
-            setUserRating(newRating)
-          } else {
-            console.error('Error updating rating:', ratingError)
+        if (solvedDates.length > 0 && (solvedDates[0] === today || solvedDates[0] === yesterday)) {
+          let count = 1
+          for (let i = 1; i < solvedDates.length; i++) {
+            const prev = new Date(solvedDates[i - 1]!)
+            const curr = new Date(solvedDates[i]!)
+            const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400_000)
+            if (diffDays === 1) count++
+            else break
           }
-        }
-
-        // Calculate real streak
-        const { data: allAttempts } = await supabase
-          .from('puzzle_attempts')
-          .select('solved, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-
-        if (allAttempts && allAttempts.length > 0) {
-          const solvedDates = Array.from(new Set(
-            allAttempts
-              .filter(a => a.solved)
-              .map(a => a.created_at.slice(0, 10))
-          )).sort((a, b) => (a < b ? 1 : -1))
-
-          const today = new Date().toISOString().slice(0, 10)
-          const yesterday = new Date(Date.now() - 86400_000).toISOString().slice(0, 10)
-
-          if (solvedDates.length > 0 && (solvedDates[0] === today || solvedDates[0] === yesterday)) {
-            let count = 1
-            for (let i = 1; i < solvedDates.length; i++) {
-              const prev = new Date(solvedDates[i - 1])
-              const curr = new Date(solvedDates[i])
-              const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400_000)
-              if (diffDays === 1) count++
-              else break
-            }
-            setStreak(count)
-          } else {
-            setStreak(1) // Just solved today, fresh streak
-          }
+          setStreak(count)
         } else {
           setStreak(1)
         }
+      } else {
+        setStreak(1)
       }
     }
   })

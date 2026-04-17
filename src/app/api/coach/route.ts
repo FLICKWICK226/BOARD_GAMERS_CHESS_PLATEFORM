@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Service role client for credit operations (bypasses RLS)
 const supabaseAdmin = createClient(
@@ -104,6 +105,27 @@ export async function POST(request: Request) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized: invalid session.' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // ── Rate limit: 5 AI coach requests per user per 60 seconds ──
+  const rl = rateLimit(`coach:${user.id}`, 5, 60_000);
+  if (!rl.allowed) {
+    const retryAfterSec = Math.ceil(rl.resetInMs / 1000);
+    return new Response(
+      JSON.stringify({
+        error: `Trop de requêtes. Réessayez dans ${retryAfterSec} secondes.`,
+        retry_after: retryAfterSec,
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSec),
+          'X-RateLimit-Limit': '5',
+          'X-RateLimit-Remaining': '0',
+        },
+      }
     );
   }
 
@@ -282,6 +304,15 @@ export async function GET(request: Request) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // ── Rate limit: 30 credit-check requests per user per 60 seconds ──
+  const rl = rateLimit(`coach-get:${user.id}`, 30, 60_000);
+  if (!rl.allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests.' }),
+      { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '60' } }
     );
   }
 

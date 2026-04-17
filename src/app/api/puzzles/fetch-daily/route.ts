@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // ────────────────────────────────────────────
 // Types from Lichess API
@@ -120,6 +121,24 @@ export async function POST(request: Request) {
   if (!isAuthorized) {
     console.error(`[API] Unauthorized access attempt to fetch-daily. Auth provided: ${authHeader ? 'Bearer' : 'None'}, X-API-Key: ${xApiKey ? 'Yes' : 'No'}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // ── Rate limit: 3 fetch requests per IP per hour ──
+  const clientIp = getClientIp(request)
+  const rl = rateLimit(`fetch-daily:${clientIp}`, 3, 3_600_000)
+  if (!rl.allowed) {
+    const retryAfterSec = Math.ceil(rl.resetInMs / 1000)
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. This endpoint can only be called 3 times per hour.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSec),
+          'X-RateLimit-Limit': '3',
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    )
   }
 
   const supabase = createClient(

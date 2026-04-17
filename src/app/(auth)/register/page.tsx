@@ -114,9 +114,9 @@ export default function RegisterPage() {
                     name="password"
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
-                    placeholder="6+ caractères"
+                    placeholder="8+ caractères"
                     className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/40 focus:border-[#92c753]/50 transition-all duration-300"
                   />
                 </div>
@@ -130,7 +130,7 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     placeholder="Confirmation"
                     className="w-full px-5 py-3.5 bg-gray-800/40 border border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#92c753]/40 focus:border-[#92c753]/50 transition-all duration-300"
