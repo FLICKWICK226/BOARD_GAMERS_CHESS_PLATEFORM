@@ -9,7 +9,6 @@ const ALLOWED_OTP_TYPES: EmailOtpType[] = [
   'invite',
   'email',
   'email_change',
-  'phone_change',
 ]
 
 // ── Allowlist of internal paths `next` can redirect to ──
