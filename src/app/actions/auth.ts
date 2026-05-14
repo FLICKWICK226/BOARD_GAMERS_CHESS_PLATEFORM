@@ -110,8 +110,7 @@ export async function signUp(formData: FormData) {
 
   if (error) {
     console.warn(`[auth] signUp failed for ${email}: ${error.message}`)
-    // Generic message — do not reveal if email is already registered
-    return { error: 'Impossible de créer le compte. Vérifiez vos informations et réessayez.' }
+    return { error: error.message }
   }
 
   revalidatePath('/', 'layout')
