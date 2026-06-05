@@ -51,9 +51,10 @@ export async function savePuzzleAttempt({
   const { error: insertError } = await admin.from('puzzle_attempts').insert({
     user_id: user.id,
     puzzle_id: puzzleId,
-    solved: true,
-    attempts_count: wrongMoves + 1,
-    time_spent_seconds: timeSpentSeconds,
+    status: 'success',
+    wrong_moves: wrongMoves,
+    time_spent: timeSpentSeconds,
+    points_awarded: points,
   })
 
   if (insertError) {

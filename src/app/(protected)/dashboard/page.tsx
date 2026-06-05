@@ -25,11 +25,11 @@ export default async function DashboardPage() {
   // 2. Fetch Puzzle Stats
   const { data: attempts } = await supabase
     .from('puzzle_attempts')
-    .select('solved, created_at, time_spent_seconds')
+    .select('status, created_at, time_spent')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const totalSolved = attempts?.filter(a => a.solved).length || 0
+  const totalSolved = attempts?.filter(a => a.status === 'success').length || 0
   const totalAttempts = attempts?.length || 0
   const successRate = totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0
   const currentRating = profile?.rating || 1200
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
     if (!attempts || attempts.length === 0) return 0
     const solvedDates = Array.from(new Set(
       attempts
-        .filter(a => a.solved)
+        .filter(a => a.status === 'success')
         .map(a => a.created_at.slice(0, 10)) // YYYY-MM-DD
     )).sort((a, b) => (a < b ? 1 : -1))  // desc
 
@@ -73,8 +73,8 @@ export default async function DashboardPage() {
   const { data: recentAttempts } = await supabase
     .from('puzzle_attempts')
     .select(`
-      solved,
-      time_spent_seconds,
+      status,
+      time_spent,
       daily_content:puzzle_id (
         level,
         lichess_id
@@ -85,13 +85,13 @@ export default async function DashboardPage() {
     .limit(5)
 
   // 4. Transform attempts for UI
-  type PuzzleAttempt = { solved: boolean; time_spent_seconds: number; daily_content?: { level?: string; lichess_id?: string } | null }
+  type PuzzleAttempt = { status: string; time_spent: number; daily_content?: { level?: string; lichess_id?: string } | null }
   const recentPuzzles = (recentAttempts as PuzzleAttempt[] || []).map((att, idx) => ({
     id: idx,
     name: `Puzzle #${att.daily_content?.lichess_id || 'Global'}`,
     difficulty: att.daily_content?.level === 'beginner' ? 'Débutant' : att.daily_content?.level === 'intermediate' ? 'Intermédiaire' : 'Expert',
-    solved: att.solved,
-    time: att.solved ? `${Math.floor(att.time_spent_seconds / 60)}m ${att.time_spent_seconds % 60}s` : '—'
+    solved: att.status === 'success',
+    time: att.status === 'success' ? `${Math.floor(att.time_spent / 60)}m ${att.time_spent % 60}s` : '—'
   }))
 
   const stats = [

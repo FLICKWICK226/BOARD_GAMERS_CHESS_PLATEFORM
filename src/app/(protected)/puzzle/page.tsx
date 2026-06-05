@@ -177,14 +177,14 @@ export default function PuzzlePage() {
 
       const { data: allAttempts } = await supabase
         .from('puzzle_attempts')
-        .select('solved, created_at')
+        .select('status, created_at')
         .eq('user_id', authUser.id)
         .order('created_at', { ascending: false })
 
       if (allAttempts && allAttempts.length > 0) {
         const solvedDates = Array.from(new Set(
           allAttempts
-            .filter(a => a.solved)
+            .filter(a => a.status === 'success')
             .map(a => a.created_at.slice(0, 10))
         )).sort((a, b) => (a < b ? 1 : -1))
 

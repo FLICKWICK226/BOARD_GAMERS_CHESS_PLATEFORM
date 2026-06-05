@@ -30,11 +30,11 @@ export default async function ProfilePage() {
   // 2. Fetch ALL attempts for aggregates (no limit)
   const { data: allAttempts } = await supabase
     .from('puzzle_attempts')
-    .select('solved, created_at')
+    .select('status, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const totalSolved = allAttempts?.filter(a => a.solved).length || 0
+  const totalSolved = allAttempts?.filter(a => a.status === 'success').length || 0
   const totalAttempts = allAttempts?.length || 0
   const successRate = totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0
 
@@ -43,7 +43,7 @@ export default async function ProfilePage() {
     if (!allAttempts || allAttempts.length === 0) return 0
     const solvedDates = Array.from(new Set(
       allAttempts
-        .filter(a => a.solved)
+        .filter(a => a.status === 'success')
         .map(a => a.created_at.slice(0, 10))
     )).sort((a, b) => (a < b ? 1 : -1))
 
@@ -68,10 +68,10 @@ export default async function ProfilePage() {
   const { data: rawHistory } = await supabase
     .from('puzzle_attempts')
     .select(`
-      solved,
+      status,
       created_at,
-      time_spent_seconds,
-      attempts_count,
+      time_spent,
+      points_awarded,
       daily_content:puzzle_id (
         level,
         lichess_id
@@ -81,15 +81,15 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: false })
     .limit(10)
   
-  type PuzzleAttemptRaw = { solved: boolean; created_at: string; time_spent_seconds: number; attempts_count: number; daily_content?: { level?: string; lichess_id?: string } | null }
+  type PuzzleAttemptRaw = { status: string; created_at: string; time_spent: number; points_awarded: number; daily_content?: { level?: string; lichess_id?: string } | null }
   const puzzleHistory = (rawHistory as PuzzleAttemptRaw[] || []).map((att, idx) => ({
     id: idx,
     name: `Puzzle #${att.daily_content?.lichess_id || 'Global'}`,
     difficulty: att.daily_content?.level || 'beginner',
-    solved: att.solved,
-    time: att.solved ? `${Math.floor(att.time_spent_seconds / 60)}m ${att.time_spent_seconds % 60}s` : '—',
+    solved: att.status === 'success',
+    time: att.status === 'success' ? `${Math.floor(att.time_spent / 60)}m ${att.time_spent % 60}s` : '—',
     date: new Date(att.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
-    points: att.solved ? Math.max(50 - ((att.attempts_count - 1) * 10), 10) : 0
+    points: att.points_awarded || 0
   }))
 
   const totalPoints = puzzleHistory.reduce((acc, p) => acc + p.points, 0)
